@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:source_gen/source_gen.dart';
@@ -13,6 +14,7 @@ import 'type_helper.dart';
 import 'type_helpers/big_int_helper.dart';
 import 'type_helpers/date_time_helper.dart';
 import 'type_helpers/duration_helper.dart';
+import 'type_helpers/enum_helper.dart';
 import 'type_helpers/json_helper.dart';
 import 'type_helpers/uri_helper.dart';
 
@@ -74,6 +76,14 @@ class JsonSerializableGenerator
         '`@JsonSerializable` can only be used on classes.',
         element: element,
       );
+    }
+
+    final targetType = element.thisType;
+    if (targetType is InterfaceType && targetType.element.isEnum) {
+      final memberContent = enumValueMapFromType(targetType);
+      if (memberContent != null) {
+        return [enumDecodeHelper, enumDecodeHelperNullable, memberContent];
+      }
     }
 
     final helper = GeneratorHelper(_settings, element, annotation);
